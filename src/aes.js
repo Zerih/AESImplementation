@@ -1,11 +1,17 @@
 'use strict';
+//TODO: tratar el mensaje recibido propiamente
+//TODO: KEYEXPANSION
+//TODO: MIXCOLUMNS
 
 //default key size: 128bits [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 //mesaage size: 128bits 
 //default rounds 10
 document.addEventListener("DOMContentLoaded", function(){
+    document.getElementById("result").innerHTML = "";
     document.getElementById("cipher").addEventListener("click", cifrar);
-    //document.getElementById("decipher").addEventListener("click", decipher);
+    document.getElementById("decipher").addEventListener("click", ()=>{
+        document.getElementById("result").innerHTML = "decipher machine broke lol"
+    });
 });
 
     //default values: 
@@ -100,9 +106,19 @@ const conversiones = function(text){
     }
 };
 
-function cifrar(){
-    //por mientras
-   let text = conversiones(document.getElementById("text").value).textToBytes();
+function cifrar(plainText, key){
+    //hacemos el arreglo de estado
+    state = makeArray(plainText);
+    //pasar inputs a bytes 
+    //KeyExpansion
+    //addRoundKey
+    for(i in 9){
+        subBytes();
+        shiftRows();
+        mixColumns();
+        addRoundKey();
+    }
+    let text = conversiones(document.getElementById("text").value).textToBytes();
     console.log("bytes: "+text);
     let textInHex = conversiones(text).hexFromBytes();
     console.log("hex: "+textInHex);
@@ -115,18 +131,24 @@ function cifrar(){
     // console.log(textIn16);
 }
 
-function decipher(){
-    console.log("decipher machine broke");
-}
+//hacer arreglo: 
+function makeArray(textInBytes){
+    //hacer el texto de 16 bytes
+    if(textInBytes.length > 16){
+        textInBytes = textInBytes.substr(0,16);
+    }else if(textInBytes.length < 16){
+        while(textInBytes.length < 16){
+            textInBytes.push(32);
+        }
+    }
+    return textInBytes;
+};
 
 //funcion para acceder a los valores de sBox
 function getSBoxValue(n){
     return sBox[n];
 };
 
-function getSBoxInvValue(n){
-    return sBoxInv[n];
-};
 
 //funciones para acceder al valor de RCON
 function getRconValue(n){
@@ -141,35 +163,24 @@ function rotate(word){
 }
 
 //make matrizEstado
-function makeState(textInBytes){
-    let mState = [];
-    if(textInBytes.length > 16){
-        textInBytes = textInBytes.substr(0,16);
-    }else if(textInBytes < 16){
-        textInBytes.push(32);
-    }
-    console.log("state: "+textInBytes);
-    for(let i = 0; i<textInBytes.length;i++){
-        let word = [];
-        for(let j=0;j<3;j++){
-            word.push(textInBytes[j]);
-        }
-        mState.push(word);
-    }
-    return mState;
-}
-// //hacer arreglo: 
-// function makeArray(textInBytes){
-//     //hacer el texto de 16 bytes
+// function makeState(textInBytes){
+//     let mState = [];
 //     if(textInBytes.length > 16){
 //         textInBytes = textInBytes.substr(0,16);
-//     }else if(textInBytes.length < 16){
-//         while(textInBytes.length < 16){
-//             textInBytes.push(32);
-//         }
+//     }else if(textInBytes < 16){
+//         textInBytes.push(32);
 //     }
-//     return textInBytes;
-// };
+//     console.log("state: "+textInBytes);
+//     for(let i = 0; i<textInBytes.length;i++){
+//         let word = [];
+//         for(let j=0;j<3;j++){
+//             word.push(textInBytes[j]);
+//         }
+//         mState.push(word);
+//     }
+//     return mState;
+// }
+
 
 //metodo de generacion de llaves 
 //operaciones que se hacen: 
@@ -193,35 +204,60 @@ function keyOperations(word, iteration){
     //se hace XOR con la primera palabra 
 }
 
+//funcion de expansion key
 function keyExpansion(key0){
+return true;
+};
+
+function addRoundKey(state, roundKey){
+    //se hace XOR
+    for(i in 16){
+        state[i] ^= roundKey[i]
+    }
+}
+
+function subBytes(state){
+    for(i in 16){
+        state[i] = sBox[state[i]];
+    }
+}
+
+function shiftRows(state){
+    //tmp 
+    //ejemplo: 
+    // [0 4 8  12          [ 0  4 8 12]
+    //  1 5 9  13            5 9 13 1
+    //  2 6 10 14           10 14 2 6         
+    //  3 7 11 15] =>       15 3 7 11
+    temp = (16);
+    temp[0] = state[0];
+    temp[1] = state[5];
+    temp[2] = state[10];
+    temp[3] = state[15];
+
+    temp[4] = state[4];
+    temp[5] = state[9];
+    temp[6] = state[14];
+    temp[7] = state[3];
+
+    temp[8] = state[8];
+    temp[9] = state[13];
+    temp[10] = state[2];
+    temp[11] = state[7];
+    
+    temp[12] = state[12];
+    temp[13] = state[1];
+    temp[14] = state[6];
+    temp[15] = state[11];
+
+    //copiamos el array nuevo al state
+    state = [...temp];
+}
+
+function mixColumns(state){
 
 }
 
-const processes = function(){
-    return{
-        keyExpansion: function(){
-
-        },
-        addRoundKey: function(state, roundKey){
-            //Hace XOR del estado con la round key[n]
-            for(i in 16){
-                //^ XOR 
-                state[i] ^= roundKey[i]
-            }
-            return state;
-        },
-        subBytes: function(){
-
-        },
-        shiftRows: function(){
-
-        }, 
-        
-        mixColumns: function(){
-
-        }
-    }
-};
     
 
 
