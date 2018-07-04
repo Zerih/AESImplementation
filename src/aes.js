@@ -159,6 +159,7 @@ function cifrar(plainText, key){
     //pasar inputs a bytes 
     //KeyExpansion
     //addRoundKey
+    addRoundKey();
     for(i in 9){
         subBytes();
         shiftRows();
