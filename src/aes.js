@@ -1,7 +1,6 @@
 'use strict';
 //TODO: tratar el mensaje recibido propiamente
 //TODO: KEYEXPANSION
-//TODO: MIXCOLUMNS
 
 //default key size: 128bits [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 //mesaage size: 128bits 
@@ -78,6 +77,7 @@ const mixColumnsMul3 = [0x00,0x03,0x06,0x05,0x0c,0x0f,0x0a,0x09,0x18,0x1b,0x1e,0
     0x6b,0x68,0x6d,0x6e,0x67,0x64,0x61,0x62,0x73,0x70,0x75,0x76,0x7f,0x7c,0x79,0x7a,
     0x3b,0x38,0x3d,0x3e,0x37,0x34,0x31,0x32,0x23,0x20,0x25,0x26,0x2f,0x2c,0x29,0x2a,
     0x0b,0x08,0x0d,0x0e,0x07,0x04,0x01,0x02,0x13,0x10,0x15,0x16,0x1f,0x1c,0x19,0x1a];
+
 //funciones de conversion text-byte-hex 
 const conversiones = function(text){
     return{
@@ -147,11 +147,15 @@ const conversiones = function(text){
 //actual workflow 
 function cifrar(plainText, key){
     //recibo text, y llave
+    plainText = document.getElementById("text").value;
+    key = document.getElementById("password").value;
+
     //hago array del texto ya convertido a bytes
+    state = makeArray(plainText);
+    //y el array de la primera llave
     //hago array con las llaves
     //state = randomProcess(state); || state = randomProcess(state, key[n]) < n Round
     //hacemos el arreglo de estado
-    state = makeArray(plainText);
     //pasar inputs a bytes 
     //KeyExpansion
     //addRoundKey
@@ -161,6 +165,9 @@ function cifrar(plainText, key){
         mixColumns();
         addRoundKey();
     }
+    //ultima ronda 
+
+    //DOS PASOS
     let text = conversiones(document.getElementById("text").value).textToBytes();
     console.log("bytes: "+text);
     let textInHex = conversiones(text).hexFromBytes();
@@ -306,6 +313,10 @@ function mixColumns(state){
     //yessss
     state = [...temp];
     //return state
+};
+
+function extraSec(state){
+    return state;
 };
 
     
