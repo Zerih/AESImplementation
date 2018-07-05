@@ -1,16 +1,13 @@
-'use strict';
 //TODO: tratar el mensaje recibido propiamente
-//TODO: KEYEXPANSION
 
 //default key size: 128bits [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 //mesaage size: 128bits 
-//default rounds 10
+//default rounds 10 (9 + final)
 document.addEventListener("DOMContentLoaded", function(){
     document.getElementById("result").innerHTML = "";
+    document.getElementById("text").innerHTML = "";
     document.getElementById("cipher").addEventListener("click", cifrar);
-    document.getElementById("decipher").addEventListener("click", ()=>{
-        document.getElementById("result").innerHTML = "decipher machine broke lol"
-    });
+    document.getElementById("decipher").addEventListener("click", descifrar);
 });
 
     //default values: 
@@ -41,7 +38,24 @@ const sBox =  [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
         0x54, 0xbb, 0x16]
 
     //RCON
-const rCon = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
+const rCon = [
+        0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 
+        0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 
+        0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 
+        0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 
+        0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 
+        0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 
+        0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 
+        0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 
+        0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 
+        0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 
+        0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 
+        0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 
+        0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 
+        0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 
+        0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 
+        0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d
+]
 
     //posibles valores MixColumns x 2 
 const mixColumnsMul2 = [0x00,0x02,0x04,0x06,0x08,0x0a,0x0c,0x0e,0x10,0x12,0x14,0x16,0x18,0x1a,0x1c,0x1e,
@@ -78,172 +92,266 @@ const mixColumnsMul3 = [0x00,0x03,0x06,0x05,0x0c,0x0f,0x0a,0x09,0x18,0x1b,0x1e,0
     0x3b,0x38,0x3d,0x3e,0x37,0x34,0x31,0x32,0x23,0x20,0x25,0x26,0x2f,0x2c,0x29,0x2a,
     0x0b,0x08,0x0d,0x0e,0x07,0x04,0x01,0x02,0x13,0x10,0x15,0x16,0x1f,0x1c,0x19,0x1a];
 
-//funciones de conversion text-byte-hex 
-const conversiones = function(text){
-    return{
-        textToBytes: function() {
-            let result = [];
-            let i = 0;
-            text = encodeURI(text);
-            while(i < text.length){
-                let c = text.charCodeAt(i++);
-                //si es un signo %, los proximos 2 bytes seran un hex
-                if(c === 37){
-                    result.push(parseInt(text.substr(i,2), 16))
-                    i+=2;
-                } //de otra manera, cuenta como un byte
-                else{
-                    result.push(c);
-                }
-            }
-            return result; //coercearray ???
-        },
-        textFromBytes: function(){
-            const result = [];
-            let i = 0;
-            let bytes = text;
-            
-            while(i<bytes.length){
-                let c = bytes[i];
-    
-                if(c < 128){
-                    result.push(String.fromCharCode(c));
-                    i++;
-                }else if(c > 191 && c < 224){
-                    result.push(String.fromCharCode(((c & 0x1f) << 6) | (bytes[i + 1] & 0x3f)));
-                    i+=2;
-                }else{
-                    result.push(String.fromCharCode(((c & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f)));
-                    i += 3;
-                }
-            }
-    
-            return result.join('');
-        },
-
-        hexToBytes: function(){
-            let result = [];
-            for(let i=0;i<text.length;i+=2){
-                result.push(parseInt(text.substr(i,2),16));
-            }
-    
-            return result;
-        },
-
-        hexFromBytes: function(){
-            let bytes = text;
-            const Hex = '0123456789abcdef';
-            let result = [];
-            for(let i=0;i<bytes.length;i++){
-                let v = bytes[i];
-                result.push(Hex[(v & 0xf0) >> 4] + Hex[v & 0x0f]);
-            }
-            return result.join('');
+///////////////////// conversiones 
+function textToBytes(text){
+    let result = [];
+    let i = 0;
+    text = encodeURI(text);
+    while(i < text.length){
+        let c = text.charCodeAt(i++);
+        //si es un signo %, los proximos 2 bytes seran un hex
+        if(c === 37){
+            result.push(parseInt(text.substr(i,2), 16))
+            i+=2;
+        } //de otra manera, cuenta como un byte
+        else{
+            result.push(c);
         }
     }
+    return result; //coercearray ???
 };
 
+function textFromBytes(text){
+    const result = [];
+    let i = 0;
+    let bytes = text;
+    
+    while(i<bytes.length){
+        let c = bytes[i];
 
-//actual workflow 
-function cifrar(plainText, key){
+        if(c < 128){
+            result.push(String.fromCharCode(c));
+            i++;
+        }else if(c > 191 && c < 224){
+            result.push(String.fromCharCode(((c & 0x1f) << 6) | (bytes[i + 1] & 0x3f)));
+            i+=2;
+        }else{
+            result.push(String.fromCharCode(((c & 0x0f) << 12) | ((bytes[i + 1] & 0x3f) << 6) | (bytes[i + 2] & 0x3f)));
+            i += 3;
+        }
+    }
+
+    return result.join('');
+};
+
+function hexToBytes(text){
+    let result = [];
+    for(let i=0;i<text.length;i+=2){
+        result.push(parseInt(text.substr(i,2),16));
+    }
+
+    return result; 
+};
+
+function hexFromBytes(text){
+    let bytes = text;
+    const Hex = '0123456789abcdef';
+    let result = [];
+    for(let i=0;i<bytes.length;i++){
+        let v = bytes[i];
+        result.push(Hex[(v & 0xf0) >> 4] + Hex[v & 0x0f]);
+    }
+    return result.join(''); 
+};
+
+/////////////////////
+/**
+ * Metodo que se encarga de descifrar con nuestros pasos personales 
+ */
+function descifrar(){
+    if(!document.getElementById('extraSec').checked){
+        document.getElementById("result").innerHTML = "Esta aplicacion no soporta descifrado de AES sorry ";
+    }
+    //desciframos
+};
+
+/**
+ * Esta funcion llama a todos los metodos 
+ * necesarios para el cifrado AES 
+ * **/ 
+function cifrar(){
     //recibo text, y llave
-    plainText = document.getElementById("text").value;
-    key = document.getElementById("password").value;
+    let plainText = document.getElementById("text").value;
+    let key0 = document.getElementById("password").value;
+    let state = [];
+    let keys;
 
-    //hago array del texto ya convertido a bytes
-    state = makeArray(plainText);
-    //y el array de la primera llave
-    //hago array con las llaves
-    //state = randomProcess(state); || state = randomProcess(state, key[n]) < n Round
-    //hacemos el arreglo de estado
-    //pasar inputs a bytes 
-    //KeyExpansion
-    //addRoundKey
-    addRoundKey();
-    for(i in 9){
-        subBytes();
-        shiftRows();
-        mixColumns();
-        addRoundKey();
+    plainText = padding(plainText);
+    key0 = padding(key0);
+    plainText = textToBytes(plainText);
+    //console.log("en hex: "+hexFromBytes(plainText));
+    key0 = textToBytes(key0);
+    // plainText = hexFromBytes(plainText);
+    // key0 = hexFromBytes(key0);
+    console.log("text: "+plainText);
+    console.log("key: "+key0);
+
+    for(let i = 0; i< 16; i++){
+        state[i] = plainText[i];
+    };
+    console.log("state: "+state);
+   // state = plainText;
+    
+    //EXPANDER KEYS
+    keys = keyExpansion(key0);
+    //primer addRoundKey
+    state = addRoundKey(state, key0);
+    let keyOfRound;
+    for(let i = 0; i<9;i++){
+        console.log("state "+state);
+        state = subBytes(state);
+        state = shiftRows(state);
+        state = mixColumns(state);
+        //usamos la key que corresponde a este round
+        //asi que nos vamos moviendo entre 16 bytes 
+        //volver a checar
+        keyOfRound = keys.slice(16 * (i), 16 * (i+16))
+        state = addRoundKey(state, keyOfRound);
+
     }
     //ultima ronda 
-
+    state = subBytes(state);
+    state = shiftRows(state);
+    state = addRoundKey(state, keys.slice(160)); //para usar una ultima 
     //DOS PASOS
-    let text = conversiones(document.getElementById("text").value).textToBytes();
-    console.log("bytes: "+text);
-    let textInHex = conversiones(text).hexFromBytes();
-    console.log("hex: "+textInHex);
-    //let textIn16 = makeArray(text);
-    let state = makeState(text);
-    console.log(state);
-    let n = 0;
-    // console.log(textIn16[n]);
-    // console.log(sBox[textIn16[n]]);
-    // console.log(textIn16);
-}
+    if(document.getElementById('extraSec').checked){
+        //extraSec
+    }
 
-//hacer arreglo con el input
-function makeArray(textInBytes){
-    //hacer el texto de 16 bytes
-    if(textInBytes.length > 16){
-        textInBytes = textInBytes.substr(0,16);
-    }else if(textInBytes.length < 16){
-        while(textInBytes.length < 16){
-            textInBytes.push(32);
+    state = hexFromBytes(state);
+
+    document.getElementById("result").innerHTML = state;
+};
+
+
+function padding(text){
+    if(text.length > 16){
+       text = text.substr(0, 16);
+    }else if (text.length < 16){
+        while(text.length < 16){
+            text+='0';
         }
     }
-    return textInBytes;
+    return text;
 };
 
-// //Esto sirve para el momento de rotar en shiftColumns
-// function rotate(word){
-//     //todo menos el primer char + el ultimo char
-//     //ej > david > avidd
-//     return word.substr(1, word.length) + word.substr(0,1);
-// }
 
-////////////////////////////////////////////////
-//metodo de generacion de llaves 
-//operaciones que se hacen: 
-//se toma la ultima palabra, se rota el byte, primero a ultimo
-//se hace subbytes
-//se hace XOR con la primera palabra
-//despues se hace XOR con RCON > la primera palabra
-//despues se hace xor con las otras palabras, 
-//primera con segunda, segunda con tercera, tercera con cuarta
-//esto para tener 10+1 claves (inicial + 10 subclaves)
-//metodos basicos para la generacion de llaves:
+// //hacer arreglo con el input
+// function makeArray(textInBytes){
+//     //hacer el texto de 16 bytes
+//     let temp = [];
+//     for(let i=0;i<textInBytes.length;i++){
+//         temp[i] = textInBytes.charAt(i);
+//     }
+//     if(temp.length > 16){
+//         temp = temp.slice(0,16);
+//     }else if(temp.length < 16){
+//         while(temp.length < 16){
+//             temp.push(20); //space in hex ?
+//         }
+//     }
+//     return temp;
+// };
 
+
+ /**
+  * Metodo que rota el primer char hasta el ultimo puesto
+  * @param {array String} word 
+  */
+function rotate(word){
+    //push = inserta un nuevo item al final de un arreglo
+    //shift = obtiene el primer elemento de un arreglo
+    return word.push(word.shift());
+    //todo menos el primer char + el ultimo char
+    //ej > david > avidd
+    //return word.substr(1, word.length) + word.substr(0,1);
+};
+
+/**
+ * Este metodo hace las operaciones basicas a una llave 
+ * para generar la nueva llave en KeyExpansion
+ * @param {array} word : llave 
+ * @param {int} iteration : en que n de iteracion se esta, para el RCON
+ */
 function keyOperations(word, iteration){
     //se rota la llave
-    word = rotate(word)
+    word = rotate(word);
+    console.log(word);
     //se aplica subBytes con S-BOX
-    for(n in 4){
-        word[n] = getSBoxValue(word[n]);
-
+    //y luego el rcon 
+    for(n in word){
+        word[n] = sBox(word[n]);
     };
-    //se hace XOR con la primera palabra 
-}
 
-//funcion de expansion key
-function keyExpansion(key0){
-return true;
+    //RCON-step: 
+    word[0] ^= rCon[iteration];
 };
+
+/**
+ * Este metodo lleva a cabo los procesos necesarios 
+ * para generar las llaves 
+ * @param {Array de llaves} key0 
+ */
+function keyExpansion(key0){
+    let keys = [];
+    //bytes generados
+    let bytes;
+    let iteration = 1;
+    let temp = []; //para el paso keyOperations 
+    //16 * 11 = 176 <- n de bytes entre todas las keys 
+
+    //copiamos la input key al arreglo 
+    for(let i = 0; i<16; i++){
+        keys[i] = key0[i];
+    }
+    bytes = 16; //<- acabamos de agregar la primera key
+
+    //mientras no tengamos todas las 176 keys: 
+    while(bytes.length < 176){ 
+        console.log(bytes);
+        //vamos a almacenar los ultimos 4 bytes generados 
+        for(let i=0 ;i<4; i++){
+            temp[i] = keys[i + bytes -4];
+            //temp[i].push(keys[i+bytes-4]);
+        }
+        //cada 16 bytes
+        if(bytes % 16 == 0){
+            keyOperations(temp, iteration);
+            iteration++;
+        }
+        //despues se hace XOR de temp (ressultado de keyOperations) con los bytes de 3 posiciones 
+        //ATRAS,  osea, bytes-16 y se guardan en keys[n], como ya una nueva key
+        for(let j = 0; j<4; j++){
+            keys[bytes] = keys[bytes-16] ^ temp[j]; 
+            bytes++;
+        }      
+
+    }
+
+    return keys;
+
+};
+
 ////////////////////////////////////////////////
 function addRoundKey(state, roundKey){
+    
     //se hace XOR
-    for(i in 16){
-        state[i] ^= roundKey[i]
+    for(let i = 0;i<16;i++){
+       // state[i] = String.fromCharCode(state[i].charCodeAt(0) ^ roundKey[i].charCodeAt(0));
+       //state[i] = XOR_hex(state[i], roundKey[i]);
+        state[i] = state[i] ^ roundKey[i];
+        
     }
-     //return state
+    return state;
+    
 }
 
 function subBytes(state){
     for(i in 16){
         state[i] = sBox[state[i]];
     }
-     //return state
-}
+     return state
+};
 
 function shiftRows(state){
     //tmp 
@@ -252,7 +360,7 @@ function shiftRows(state){
     //  1 5 9  13            5 9 13 1
     //  2 6 10 14           10 14 2 6         
     //  3 7 11 15] =>       15 3 7 11
-    temp = new Array(16);
+    let temp = [];
     temp[0] = state[0];
     temp[1] = state[5];
     temp[2] = state[10];
@@ -276,7 +384,8 @@ function shiftRows(state){
     //copiamos el array nuevo al state
     // '...' < spread operator ES6
     state = [...temp];
-}
+    return state;
+};
 
 //lock up con las tablas establecidas 
 //tendria que estar loco para generarlas a pata
@@ -286,8 +395,11 @@ function shiftRows(state){
 //1 1 2 3
 //3 1 1 2
 //se va recorriendo 
+//usamos un arreglo temporal para no sobreescribir datos de
+//state que luego se utilizaran 
 function mixColumns(state){
-    temp = new Array(16); 
+   let  temp = [];
+   //String.fromCharCode(state[i].charCodeAt(0) ^ roundKey[i].charCodeAt(0)) 
     //1st column
     temp[0] = mixColumnsMul2[state[0]] ^ mixColumnsMul3[state[1]] ^ state[2] ^ state[3];
     temp[1] = state[0] ^ mixColumnsMul2[state[1]] ^ mixColumnsMul3[state[2]] ^ state[3];
@@ -313,12 +425,15 @@ function mixColumns(state){
     temp[15] = mixColumnsMul3[state[12]] ^ state[13] ^ state[14] ^ mixColumnsMul2[state[15]];
     //yessss
     state = [...temp];
-    //return state
+    console.log("state: "+state);
+    return state
 };
 
 function extraSec(state){
     return state;
 };
+
+
 
     
 
