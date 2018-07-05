@@ -163,7 +163,16 @@ function descifrar(){
     if(!document.getElementById('extraSec').checked){
         document.getElementById("result").innerHTML = "Esta aplicacion no soporta descifrado de AES sorry ";
     }
-    //
+
+    let text = document.getElementById("text").value;
+    text = hexToBytes(text);
+
+    text = extraSecDecryptStep2(text);
+    text = extraSecDecryptStep1(text);
+
+    text = hexFromBytes(text);
+
+    document.getElementById("result").innerHTML = text;
 };
 
 /**
@@ -219,7 +228,10 @@ function cifrar(){
 
     //DOS PASOS
     if(document.getElementById('extraSec').checked){
-        extraSecStep1(state);
+       state = extraSecStep1(state);
+       //console.log("after: "+state);
+       state = extraSecStep2(state);
+      // console.log("before: "+state);
     }
 
     state = hexFromBytes(state);
@@ -246,22 +258,62 @@ function padding(text){
 function extraSecStep1(text){
     //console.log("state: "+text);
     let fNum = text[0];
-    for(let i=1;i<16;i++){
+    let lNum = text[text.length - 1];
+    console.log("state before: "+text);
+    console.log('lnum: '+lNum);
+    console.log('fnum: '+fNum);
+    for(let i=1;i<15;i++){
         text[i] += fNum;
+        text[i] -= lNum;
     }
-    //console.log("state after: "+text);
+    console.log("state after: "+text);
+    return text;
 };
 
 function extraSecStep2(text){
-
+    const first = 0;
+    const last = text.length - 1; //pa que sea mas leible 
+    // console.log("before: ");
+    // console.log(text);
+    console.log("first: "+text[first]);
+    console.log("last: "+text[last]);
+    text[first] = text[first] + text[last];
+    text[last] = text[first] - text[last];
+    text[first] = text[first] - text[last]; 
+    console.log("first: "+text[first]);
+    console.log("last: "+text[last]);
+    //supuestamente esto deberia intercambiar dos valores
+    // console.log("after: ");
+    // console.log(text);
+    return text;
 };
 
 function extraSecDecryptStep1(text){
-
+    let fNum = text[0];
+    let lNum = text[text.length - 1];
+    for(let i=1;i<15;i++){
+        text[i] += lNum;
+        text[i] -= fNum;
+    }
+    return text;
 };
 
 function extraSecDecryptStep2(text){
-
+    const first = 0;
+    const last = text.length - 1; //pa que sea mas leible 
+    // console.log("before: ");
+    // console.log(text);
+    console.log("first: "+text[first]);
+    console.log("last: "+text[last]);
+    text[first] = text[first] + text[last];
+    text[last] = text[first] - text[last];
+    text[first] = text[first] - text[last]; 
+    console.log("first: "+text[first]);
+    console.log("last: "+text[last]);
+    //supuestamente esto deberia intercambiar dos valores
+    // console.log("after: ");
+    // console.log(text);
+    return text;
 }
  /**
   * Metodo que rota el primer char hasta el ultimo puesto
