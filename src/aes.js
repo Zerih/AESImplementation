@@ -155,6 +155,7 @@ function hexFromBytes(text){
 };
 
 /////////////////////
+
 /**
  * Metodo que se encarga de descifrar con nuestros pasos personales 
  */
@@ -162,7 +163,7 @@ function descifrar(){
     if(!document.getElementById('extraSec').checked){
         document.getElementById("result").innerHTML = "Esta aplicacion no soporta descifrado de AES sorry ";
     }
-    //desciframos
+    //
 };
 
 /**
@@ -183,22 +184,24 @@ function cifrar(){
     key0 = textToBytes(key0);
     // plainText = hexFromBytes(plainText);
     // key0 = hexFromBytes(key0);
-    console.log("text: "+plainText);
-    console.log("key: "+key0);
+    // console.log("text: "+plainText);
+    // console.log("key: "+key0);
 
     for(let i = 0; i< 16; i++){
         state[i] = plainText[i];
     };
-    console.log("state: "+state);
+    // console.log("state: "+state);
    // state = plainText;
     
     //EXPANDER KEYS
     keys = keyExpansion(key0);
+    console.log("keys expandidas: "+keys);
+    console.log("longitud de keys: "+keys.length);
     //primer addRoundKey
     state = addRoundKey(state, key0);
     let keyOfRound;
     for(let i = 0; i<9;i++){
-        console.log("state "+state);
+        //console.log("state "+state); //debug 
         state = subBytes(state);
         state = shiftRows(state);
         state = mixColumns(state);
@@ -212,18 +215,21 @@ function cifrar(){
     //ultima ronda 
     state = subBytes(state);
     state = shiftRows(state);
-    state = addRoundKey(state, keys.slice(160)); //para usar una ultima 
+    state = addRoundKey(state, keys.slice(160)); //para usar una ultima clave
+
     //DOS PASOS
     if(document.getElementById('extraSec').checked){
-        //extraSec
+        extraSecStep1(state);
     }
 
     state = hexFromBytes(state);
-
     document.getElementById("result").innerHTML = state;
 };
 
-
+/**
+ * Metodo que se encarga de hacer la longitud de mensaje a 16 bytes 
+ * @param {input text} text 
+ */
 function padding(text){
     if(text.length > 16){
        text = text.substr(0, 16);
@@ -235,25 +241,28 @@ function padding(text){
     return text;
 };
 
+//toma el primer numero del mensaje 
+//y se lo suma al resto del estado 
+function extraSecStep1(text){
+    //console.log("state: "+text);
+    let fNum = text[0];
+    for(let i=1;i<16;i++){
+        text[i] += fNum;
+    }
+    //console.log("state after: "+text);
+};
 
-// //hacer arreglo con el input
-// function makeArray(textInBytes){
-//     //hacer el texto de 16 bytes
-//     let temp = [];
-//     for(let i=0;i<textInBytes.length;i++){
-//         temp[i] = textInBytes.charAt(i);
-//     }
-//     if(temp.length > 16){
-//         temp = temp.slice(0,16);
-//     }else if(temp.length < 16){
-//         while(temp.length < 16){
-//             temp.push(20); //space in hex ?
-//         }
-//     }
-//     return temp;
-// };
+function extraSecStep2(text){
 
+};
 
+function extraSecDecryptStep1(text){
+
+};
+
+function extraSecDecryptStep2(text){
+
+}
  /**
   * Metodo que rota el primer char hasta el ultimo puesto
   * @param {array String} word 
@@ -261,7 +270,8 @@ function padding(text){
 function rotate(word){
     //push = inserta un nuevo item al final de un arreglo
     //shift = obtiene el primer elemento de un arreglo
-    return word.push(word.shift());
+    word.push(word.shift());
+    return word;
     //todo menos el primer char + el ultimo char
     //ej > david > avidd
     //return word.substr(1, word.length) + word.substr(0,1);
@@ -274,17 +284,19 @@ function rotate(word){
  * @param {int} iteration : en que n de iteracion se esta, para el RCON
  */
 function keyOperations(word, iteration){
+    console.log("word: "+word);
     //se rota la llave
     word = rotate(word);
-    console.log(word);
+    //console.log("worddespues: "+word);
     //se aplica subBytes con S-BOX
     //y luego el rcon 
-    for(n in word){
-        word[n] = sBox(word[n]);
+    for(let n in word){
+        word[n] = sBox[word[n]];
     };
 
     //RCON-step: 
     word[0] ^= rCon[iteration];
+    return word;
 };
 
 /**
@@ -301,14 +313,18 @@ function keyExpansion(key0){
     //16 * 11 = 176 <- n de bytes entre todas las keys 
 
     //copiamos la input key al arreglo 
-    for(let i = 0; i<16; i++){
-        keys[i] = key0[i];
-    }
+    // for(let i = 0; i<16; i++){
+    //     keys[i] = key0[i];
+    // }
+    keys = [...key0]; //copiado segun ES6
+    console.log("keys: "+keys);
+
     bytes = 16; //<- acabamos de agregar la primera key
 
     //mientras no tengamos todas las 176 keys: 
-    while(bytes.length < 176){ 
-        console.log(bytes);
+    let n = 1;
+    while(bytes < 176){ 
+        console.log("bytes: "+bytes);
         //vamos a almacenar los ultimos 4 bytes generados 
         for(let i=0 ;i<4; i++){
             temp[i] = keys[i + bytes -4];
@@ -316,7 +332,7 @@ function keyExpansion(key0){
         }
         //cada 16 bytes
         if(bytes % 16 == 0){
-            keyOperations(temp, iteration);
+            temp = keyOperations(temp, iteration);
             iteration++;
         }
         //despues se hace XOR de temp (ressultado de keyOperations) con los bytes de 3 posiciones 
@@ -325,7 +341,6 @@ function keyExpansion(key0){
             keys[bytes] = keys[bytes-16] ^ temp[j]; 
             bytes++;
         }      
-
     }
 
     return keys;
@@ -425,7 +440,6 @@ function mixColumns(state){
     temp[15] = mixColumnsMul3[state[12]] ^ state[13] ^ state[14] ^ mixColumnsMul2[state[15]];
     //yessss
     state = [...temp];
-    console.log("state: "+state);
     return state
 };
 
