@@ -160,19 +160,22 @@ function hexFromBytes(text){
  * Metodo que se encarga de descifrar con nuestros pasos personales 
  */
 function descifrar(){
-    if(!document.getElementById('extraSec').checked){
-        document.getElementById("result").innerHTML = "Esta aplicacion no soporta descifrado de AES sorry ";
+    if(document.getElementById('extraSec').checked){
+            
+        let text = document.getElementById("text").value;
+        text = hexToBytes(text);
+
+        text = extraSecDecryptStep2(text);
+        text = extraSecDecryptStep1(text);
+
+        text = hexFromBytes(text);
+
+        document.getElementById("result").innerHTML = text;
+    
+    }else{ 
+        document.getElementById("result").innerHTML = "Esta aplicacion no soporta descifrado de AES sorry "
     }
 
-    let text = document.getElementById("text").value;
-    text = hexToBytes(text);
-
-    text = extraSecDecryptStep2(text);
-    text = extraSecDecryptStep1(text);
-
-    text = hexFromBytes(text);
-
-    document.getElementById("result").innerHTML = text;
 };
 
 /**
